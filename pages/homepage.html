@@ -56,7 +56,10 @@
     <!-- Preload critical fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="https://fonts.gstatic.com/s/orbitron/v35/yMJRMIlzdq56YUMzA3JLEMzZ6j2F4ZJ3.ttf" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hiJ-Ek-_EeA.woff2" as="font" type="font/woff2" crossorigin>
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap"></noscript>
     <style>
         /* Critical CSS - Above the fold styles */
@@ -70,11 +73,24 @@
         .neon-glow{box-shadow:0 0 20px rgba(0,188,212,0.4);transition:box-shadow 0.3s ease}
         .neon-glow:hover{box-shadow:0 0 30px rgba(0,188,212,0.6)}
         
-        /* Prevent Layout Shift */
-        .mockup-slide{aspect-ratio:1152/1785;min-height:28rem}
-        .mockup-slide img{width:100%;height:100%;object-fit:cover;object-position:top}
-        .hero-slide{aspect-ratio:16/9;min-height:24rem}
-        .hero-slide img{width:100%;height:100%;object-fit:cover}
+        /* Prevent Layout Shift - Critical */
+        .mockup-slide{aspect-ratio:1152/1785;min-height:28rem;position:relative}
+        .mockup-slide img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
+        .hero-slide{aspect-ratio:16/9;min-height:24rem;position:relative}
+        .hero-slide img{width:100%;height:100%;object-fit:cover;display:block}
+        
+        /* Font loading optimization */
+        @font-face{font-family:Orbitron;font-display:swap;src:url(https://fonts.gstatic.com/s/orbitron/v35/yMJRMIlzdq56YUMzA3JLEMzZ6j2F4ZJ3.ttf) format('woff2')}
+        @font-face{font-family:Inter;font-display:swap;src:url(https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hiJ-Ek-_EeA.woff2) format('woff2')}
+        
+        /* Prevent text layout shift */
+        .text-gradient{font-size:clamp(2rem,5vw,4rem);line-height:1.1;font-weight:900}
+        .hero-title{font-size:clamp(1.5rem,4vw,3rem);line-height:1.2;font-weight:700}
+        
+        /* Product grid optimization */
+        .product-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1.5rem}
+        .product-card{aspect-ratio:1/1.2;position:relative;overflow:hidden}
+        .product-card img{width:100%;height:100%;object-fit:cover;display:block}
         
         /* Particle Animation Styles */
         .particles-container {
@@ -1173,7 +1189,7 @@
           const slideEl = document.getElementById(`hero-slide-${index}`);
           if(!imgEl || !titleEl || !subEl || !slideEl) return;
           if(p){
-            imgEl.src = p.image_url || imgEl.src;
+            imgEl.src = p.image_url ? p.image_url.replace('/upload/', '/upload/c_fill,w_600,h_400,q_auto,f_auto/') : imgEl.src;
             titleEl.textContent = p.name || 'Featured Design';
             subEl.textContent = `$${Number(p.price||0).toFixed(2)} · ${p.category||'New'}`;
             slideEl.href = `product.html?id=${p.id}`;
@@ -1196,7 +1212,7 @@
           grid.innerHTML = picks.map(p=>`
             <a href="product.html?id=${p.id}" class="glass-card rounded-xl overflow-hidden group cursor-pointer transition-all duration-300 hover:scale-105">
               <div class="relative">
-                <img src="${p.image_url}" alt="${p.name}" class="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy" />
+                <img src="${p.image_url.replace('/upload/', '/upload/c_fill,w_300,h_240,q_auto,f_auto/')}" alt="${p.name}" class="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500" width="300" height="240" loading="lazy" />
                 <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
                 <div class="absolute bottom-4 left-4 right-4">
                   <p class="text-white text-sm font-medium">${p.name}</p>
@@ -1213,7 +1229,7 @@
           if(picks.length===0) return;
           grid.innerHTML = picks.map(p=>`
             <a href="product.html?id=${p.id}" class="aspect-square glass-card rounded-lg overflow-hidden group cursor-pointer">
-              <img src="${p.image_url}" alt="${p.name}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" loading="lazy" />
+              <img src="${p.image_url.replace('/upload/', '/upload/c_fill,w_200,h_200,q_auto,f_auto/')}" alt="${p.name}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" width="200" height="200" loading="lazy" />
             </a>
           `).join('');
         }
@@ -1239,7 +1255,7 @@
           grid.innerHTML = featured.map(p => `
             <div class="glass-card rounded-2xl p-6 neon-glow group cursor-pointer transition-all duration-300 hover:scale-105">
               <div class="relative mb-6 overflow-hidden rounded-xl">
-                <img src="${p.image_url || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSIjM0I0QjVCIi8+CjxwYXRoIGQ9Ik0yNSAyNUg3NVY3NUgyNVoiIHN0cm9rZT0iIzAwQkNENCIgc3Ryb2tlLXdpZHRoPSIyIiBmaWxsPSJub25lIi8+CjxwYXRoIGQ9Ik0zNSA0NUw2NSA0NU02NSA2NUwzNSA2NUwzNSA0NVoiIHN0cm9rZT0iIzAwQkNENCIgc3Ryb2tlLXdpZHRoPSIyIiBmaWxsPSJub25lIi8+Cjwvc3ZnPgo='}" alt="${p.name}" class="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy" />
+                <img src="${p.image_url ? p.image_url.replace('/upload/', '/upload/c_fill,w_400,h_300,q_auto,f_auto/') : 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSIjM0I0QjVCIi8+CjxwYXRoIGQ9Ik0yNSAyNUg3NVY3NUgyNVoiIHN0cm9rZT0iIzAwQkNENCIgc3Ryb2tlLXdpZHRoPSIyIiBmaWxsPSJub25lIi8+CjxwYXRoIGQ9Ik0zNSA0NUw2NSA0NU02NSA2NUwzNSA2NUwzNSA0NVoiIHN0cm9rZT0iIzAwQkNENCIgc3Ryb2tlLXdpZHRoPSIyIiBmaWxsPSJub25lIi8+Cjwvc3ZnPgo='}" alt="${p.name}" class="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500" width="400" height="300" loading="lazy" />
                 <div class="absolute top-4 right-4 bg-accent text-white px-2 py-1 rounded-full text-xs font-bold">
                   Featured
                 </div>
